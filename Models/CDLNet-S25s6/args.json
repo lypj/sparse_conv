@@ -1,0 +1,15 @@
+{
+    "model": {
+        "adaptive": false,
+        "filter_size": 7,
+        "iters": 20,
+        "num_filters": 32,
+        "stride": 6,
+        "tau0": 1e-2
+    },
+    "paths": {
+        "ckpt": "Models/CDLNet-S25s6/CDLNet-S25s6.ckpt",
+        "save": "Models/CDLNet-S25s6"
+    },
+    "type": "CDLNet"
+}
