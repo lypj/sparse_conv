@@ -2,10 +2,10 @@
 "type": "CDLNet",
 "model": {
 	"adaptive": false,
-	"num_filters": 16,
+	"num_filters": 484,
 	"filter_size": 7,
 	"stride": 2,
-	"iters": 10,
+	"iters": 40,
 	"tau0": 1e-2
 },
 "paths": {
@@ -30,7 +30,7 @@
 		"clip_grad": 5e-2
 	},
 	"opt": {
-		"lr": 1e-3
+		"lr": 3e-4
 	},
 	"sched": {
 		"gamma": 0.95,
