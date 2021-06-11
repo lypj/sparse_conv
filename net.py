@@ -14,26 +14,28 @@ class CDLNet(nn.Module):
 	"""
 	def __init__(self,
 	             num_filters = 64,   # num. filters in each filter bank operation
+	             num_inchans = 1,
 	             filter_size = 7,    # square filter side length
 	             stride = 1,         # strided convolutions
 	             iters  = 3,         # num. unrollings
 	             tau0   = 1e-2,      # initial threshold
 	             adaptive = False,   # noise-adaptive thresholds
+	             meansub = (2,3),    # mean subtraction dimensions 
 	             init = True):       # False -> use power-method for weight init
 		super(CDLNet, self).__init__()
 		
 		# -- OPERATOR INIT --
-		W = torch.randn(num_filters,1,filter_size,filter_size)
+		W = torch.randn(num_filters,num_inchans,filter_size,filter_size)
 		def conv_gen():
-			C = conv.Conv2d(1, num_filters, filter_size, stride)
+			C = conv.Conv2d(num_inchans, num_filters, filter_size, stride)
 			C.weight = W.clone()
 			return C
 		def convT_gen():
 			if stride == 1:
-				C = conv.Conv2d(num_filters, 1, filter_size, stride)
+				C = conv.Conv2d(num_filters, num_inchans, filter_size, stride)
 				C.weight = conv.adjoint(W).clone()
 			else:
-				C = conv.ConvAdjoint2d(num_filters, 1, filter_size, stride)
+				C = conv.ConvAdjoint2d(num_filters, num_inchans, filter_size, stride)
 				C.weight = W.clone()
 			return C
 		self.D = convT_gen()
@@ -45,7 +47,7 @@ class CDLNet(nn.Module):
 			with torch.no_grad():
 				print("Running power-method on initial dictionary...")
 				L, _, _ = solvers.powerMethod(lambda x: self.B[0](self.A[0](x)),
-											  torch.rand(1,1,128,128),
+											  torch.rand(1,num_inchans,128,128),
 											  num_iter= 100,
 											  verbose = False)
 				print(f"Done. L={L:.3e}.")
@@ -71,6 +73,7 @@ class CDLNet(nn.Module):
 		self.stride    = stride
 		self.num_filters = num_filters
 		self.filter_size = filter_size
+		self.meansub = meansub
 
 	@torch.no_grad()
 	def project(self):
@@ -88,7 +91,7 @@ class CDLNet(nn.Module):
 	def forward(self, y, sigma_n=None):
 		""" LISTA + D w/ noise-adaptive thresholds
 		""" 
-		yp, params = utils.pre_process(y, self.stride)
+		yp, params = utils.pre_process(y, self.stride, self.meansub)
 		# THRESHOLD SCALE-FACTOR c
 		c = 1 if sigma_n is None or not self.adaptive else sigma_n/255.0
 		# LISTA

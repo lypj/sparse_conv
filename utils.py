@@ -29,12 +29,12 @@ def awgn(input, noise_std):
 		       (noise_std[1] - noise_std[0])*torch.rand(len(input),1,1,1, device=input.device)
 	return input + torch.randn_like(input) * (sigma/255), sigma
 
-def pre_process(x, stride):
+def pre_process(x, stride, meansub=(2,3)):
 	""" image preprocessing: stride-padding and mean subtraction.
 	"""
 	params = []
 	# mean-subtract
-	xmean = x.mean(dim=(2,3), keepdim=True)
+	xmean = x.mean(dim=meansub, keepdim=True)
 	x = x - xmean
 	params.append(xmean)
 	# pad signal for stride

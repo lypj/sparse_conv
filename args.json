@@ -2,11 +2,13 @@
 "type": "CDLNet",
 "model": {
 	"adaptive": false,
-	"num_filters": 484,
+	"num_filters": 64,
+	"num_inchans": 3,
 	"filter_size": 7,
-	"stride": 2,
-	"iters": 40,
-	"tau0": 1e-2
+	"stride": 1,
+	"iters": 10,
+	"tau0": 1e-2,
+	"meansub": [1,2,3]
 },
 "paths": {
 	"save": "Models/CDLNet-test",
@@ -18,7 +20,8 @@
 		"crop_size": 128,
 		"trn_path_list": ["CBSD432"],
 		"val_path_list": ["Kodak"],
-		"tst_path_list": ["CBSD68"]
+		"tst_path_list": ["CBSD68"],
+		"load_color": true
 	},
 	"fit": {
 		"epochs": 6000,
@@ -30,7 +33,7 @@
 		"clip_grad": 5e-2
 	},
 	"opt": {
-		"lr": 3e-4
+		"lr": 1e-3
 	},
 	"sched": {
 		"gamma": 0.95,
