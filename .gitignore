@@ -1,6 +1,7 @@
 __pycache__/
 Models/
 args.d/
+.env/
 slurm_out/
 *.sh
 *.swp
