@@ -95,7 +95,7 @@ def aDictionary(args, model, freq=True, show=False, save=True):
 	print("--------- dictionary ---------")
 	figlist = [] # append figures so they may all be closed at the end
 	save_dir = args['paths']['save']
-	D = model.D.weight.cpu()
+	D = model.D.weight.cpu() #.permute(1,0,2,3)
 	# get effective dictionary
 	n = int(np.ceil(np.sqrt(D.shape[0])))
 	if show:
@@ -131,7 +131,7 @@ def aPassthrough(args, model, img_path, noise_std, show=False, device=torch.devi
 		if not os.path.isdir(save_dir):
 			os.mkdir(save_dir)
 	print(f"using {img_path}...")
-	x = utils.imgLoad(img_path, gray=True).to(device)
+	x = utils.imgLoad(img_path, gray= not args['train']['loaders']['load_color']).to(device)
 	y, sigma = utils.awgn(x, noise_std)
 	print(f"noise_std = {sigma}")
 	if model.adaptive:
@@ -199,7 +199,7 @@ if __name__ == "__main__":
 			raise ValueError("test set not provided (ex. --test=CBSD68).")
 		else:
 			tst_path = [arg.split("=")[1]]
-		loader = data.getDataLoader(tst_path, load_color=False, test=True)
+		loader = data.getDataLoader(tst_path, load_color=args['train']['loaders']['load_color'], test=True)
 	else:
 		loader = None
 	arg = "--img"
