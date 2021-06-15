@@ -13,20 +13,17 @@ args = json.load(args_file)
 args_file.close()
 
 loop_args = {
-	"num_filters": [64],
-	"iters": [10],
-	"meansub": [[1,2,3],[2,3]]
+	"noise_std": [5,15,25,35,45,50],
 }
 
 args["model"] = {
 	"adaptive": False,
-	"num_filters": 169,
+	"num_filters": 100,
 	"num_inchans": 3,
 	"filter_size": 7,
-	"stride": 1,
-	"iters": 30,
+	"stride": 2,
+	"iters": 22,
 	"tau0": 1e-2,
-	"meansub": [1,2,3]
 }
 
 args["train"] = {
@@ -48,7 +45,7 @@ args["train"] = {
 		"clip_grad": 5e-2,
 	},
 	"opt": {
-		"lr": 1e-3
+		"lr": 5e-4
 	},
 	"sched": {
 		"gamma": 0.95,
@@ -60,8 +57,8 @@ args['type'] = "CDLNet"
 #args['paths']['ckpt'] = ""
 #epoch0 = "4000.ckpt"
 #ckpt = "Models/CDLNet-nht_trnweight-0a/4000.ckpt"
-vnum = 2
-name = "color"
+vnum = 0
+name = "color_S"
 
 def product(*args, repeat=1):
 	# product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
