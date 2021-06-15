@@ -20,7 +20,6 @@ class CDLNet(nn.Module):
 	             iters  = 3,         # num. unrollings
 	             tau0   = 1e-2,      # initial threshold
 	             adaptive = False,   # noise-adaptive thresholds
-	             meansub = (2,3),    # mean subtraction dimensions 
 	             init = True):       # False -> use power-method for weight init
 		super(CDLNet, self).__init__()
 		
@@ -64,7 +63,7 @@ class CDLNet(nn.Module):
 			self.B[ii].weight = self.B[ii].weight / np.sqrt(L)
 		
 		# learned thresholds
-		self.tau = nn.ParameterList([nn.Parameter(tau0*torch.ones(1,num_filters,1,1)) for _ in range(iters)])
+		self.tau = nn.ParameterList([nn.Parameter(tau0*torch.ones(2,num_filters,1,1)) for _ in range(iters)])
 
 		# set parameters
 		self.iters = iters
@@ -73,7 +72,6 @@ class CDLNet(nn.Module):
 		self.stride    = stride
 		self.num_filters = num_filters
 		self.filter_size = filter_size
-		self.meansub = meansub
 
 	@torch.no_grad()
 	def project(self):
@@ -91,13 +89,13 @@ class CDLNet(nn.Module):
 	def forward(self, y, sigma_n=None):
 		""" LISTA + D w/ noise-adaptive thresholds
 		""" 
-		yp, params = utils.pre_process(y, self.stride, self.meansub)
+		yp, params = utils.pre_process(y, self.stride)
 		# THRESHOLD SCALE-FACTOR c
-		c = 1 if sigma_n is None or not self.adaptive else sigma_n/255.0
+		c = 0 if sigma_n is None or not self.adaptive else sigma_n/255.0
 		# LISTA
-		z = ST(self.A[0](yp), c*self.tau[0])
+		z = ST(self.A[0](yp), self.tau[k][:1] + c*self.tau[k][1:2])
 		for k in range(1, self.iters):
-			z = ST(z - self.A[k](self.B[k](z) - yp), c*self.tau[k])
+			z = ST(z - self.A[k](self.B[k](z) - yp), self.tau[k][:1] + c*self.tau[k][1:2])
 		# DICTIONARY SYNTHESIS
 		xphat = self.D(z)
 		xhat  = utils.post_process(xphat, params)
