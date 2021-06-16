@@ -63,7 +63,7 @@ def aTest(args, model, loader, noise_std=25, blind=False, device=torch.device('c
 		t = tqdm(iter(loader), desc=f"TEST-{sigma}", dynamic_ncols=True)
 		for itern, x in enumerate(t):
 			if x.shape[2] > x.shape[3]: # for more consistent timing
-				x = x.transpose(0,1)
+				x = x.permute(0,1,3,2)
 			x = x.to(device)
 			y, s = utils.awgn(x, sigma)
 			with torch.no_grad():

@@ -93,7 +93,7 @@ class CDLNet(nn.Module):
 		# THRESHOLD SCALE-FACTOR c
 		c = 0 if sigma_n is None or not self.adaptive else sigma_n/255.0
 		# LISTA
-		z = ST(self.A[0](yp), self.tau[k][:1] + c*self.tau[k][1:2])
+		z = ST(self.A[0](yp), self.tau[0][:1] + c*self.tau[0][1:2])
 		for k in range(1, self.iters):
 			z = ST(z - self.A[k](self.B[k](z) - yp), self.tau[k][:1] + c*self.tau[k][1:2])
 		# DICTIONARY SYNTHESIS

@@ -13,7 +13,8 @@ args = json.load(args_file)
 args_file.close()
 
 loop_args = {
-	"noise_std": [5,15,25,35,45,50],
+	"noise_std": [[15,35],[0,55]],
+	"adaptive": [True,False]
 }
 
 args["model"] = {
@@ -58,7 +59,7 @@ args['type'] = "CDLNet"
 #epoch0 = "4000.ckpt"
 #ckpt = "Models/CDLNet-nht_trnweight-0a/4000.ckpt"
 vnum = 0
-name = "color_S"
+name = "color_AB"
 
 def product(*args, repeat=1):
 	# product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
