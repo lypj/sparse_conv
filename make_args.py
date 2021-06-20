@@ -13,16 +13,17 @@ args = json.load(args_file)
 args_file.close()
 
 loop_args = {
-	"noise_std": [10,20,30,40],
+	"adaptive": [True,False],
+	"noise_std": [[15,35],[0,55]]
 }
 
 args["model"] = {
 	"adaptive": False,
-	"num_filters": 100,
-	"num_inchans": 3,
+	"num_filters": 169,
+	"num_inchans": 1,
 	"filter_size": 7,
 	"stride": 2,
-	"iters": 22,
+	"iters": 30,
 	"tau0": 1e-2,
 }
 
@@ -30,7 +31,7 @@ args["train"] = {
 	"loaders": {
 		"batch_size": 10,
 		"crop_size": 128,
-		"load_color": True,
+		"load_color": False,
 		"trn_path_list": ["CBSD432"],
 		"val_path_list": ["Kodak"],
 		"tst_path_list": ["CBSD68"]
@@ -45,7 +46,7 @@ args["train"] = {
 		"clip_grad": 5e-2,
 	},
 	"opt": {
-		"lr": 5e-4
+		"lr": 8e-4
 	},
 	"sched": {
 		"gamma": 0.95,
@@ -57,8 +58,8 @@ args['type'] = "CDLNet"
 #args['paths']['ckpt'] = ""
 #epoch0 = "4000.ckpt"
 #ckpt = "Models/CDLNet-nht_trnweight-0a/4000.ckpt"
-vnum = 6
-name = "color_S"
+vnum = 0
+name = "graybig-AB"
 
 def product(*args, repeat=1):
 	# product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
