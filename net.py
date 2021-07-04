@@ -91,13 +91,7 @@ class CDLNet(nn.Module):
 		""" 
 		yp, params = utils.pre_process(y, self.stride)
 		# THRESHOLD SCALE-FACTOR c
-		# c = 0 if sigma_n is None or not self.adaptive else sigma_n/255.0
-		if sigma_n is not None:
-			c = nle.nlemap(yp, 31)
-			cq = torch.zeros_like(c)
-			cq[c >= 0.13] = 0.07
-			cq[c < 0.13] = 25/255.0
-			c = cq
+		 c = 0 if sigma_n is None or not self.adaptive else sigma_n/255.0
 		# LISTA
 		z = ST(self.A[0](yp), self.tau[0][:1] + c*self.tau[0][1:2])
 		for k in range(1, self.iters):
