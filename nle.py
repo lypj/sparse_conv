@@ -8,16 +8,6 @@ import scipy
 from scipy.stats import gamma
 import wvlt, utils
 
-def nlemap(y, ps):
-	p = (ps-1)//2
-	yp = F.pad(y, (p,p,p,p), 'reflect')
-	yps = utils.stack(yp, ps, 1)
-	ypbs = utils.batch_stack(yps)
-	sigma_vec = nleMAD(ypbs)
-	sigma_map = sigma_vec.flatten().reshape(y.shape[0], 1, y.shape[2], y.shape[3])
-	sigma_map = sigma_map[:,:,::2,::2]
-	return sigma_map
-
 def noiseLevel(y, method="MAD", **kwargs):
 	if method in [True, "MAD", "wvlt"]:
 		return nleMAD(y)

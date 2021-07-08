@@ -136,11 +136,8 @@ def aPassthrough(args, model, img_path, noise_std, show=False, device=torch.devi
 	print(f"noise_std = {sigma}")
 	if model.adaptive:
 		if blind:
-			print("going blind!")
-			#sigma = 255 * nle.noiseLevel(y, method=blind)
-			#sigma = 255 * nle.nlemap(y, 31)
-			#print(sigma.shape)
-			#print(f"sigma_hat = {sigma.flatten().item():.3f}")
+			sigma = 255 * nle.noiseLevel(y, method=blind)
+			print(f"sigma_hat = {sigma.flatten().item():.3f}")
 		else:
 			print(f"using GT sigma.")
 	else:
