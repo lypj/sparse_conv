@@ -133,34 +133,3 @@ def visplot(images,
 			if (titles is not None) and (ind < len(titles)):
 				axs[ii,jj].set_title(titles[ind])
 	return fig
-
-def stack(T, ks, stride, padding=False):
-	""" Stack I (B, C, H, W) into patches of size (MxM).
-	output: (B, I, J, C, H, W).
-	"""
-	# (B,C,H,W) -> unfold (B,C,I,J,ks,ks) -> permute (B,I,J,C,ks,ks)
-	return T.unfold(2,ks,stride).unfold(3,ks,stride).permute(0,2,3,1,4,5)
-
-def batch_stack(S):
-	""" Reorder stack (B, I, J, C, M, M) so that 
-	patches are stacked in the batch dimension,
-	output: (B*I*J, C, H, W)
-	"""
-	C, M = S.shape[3], S.shape[-1]
-	return S.reshape(-1,C,M,M)
-
-def unbatch_stack(S, grid_shape):
-	""" Reorder batched stack into non-batcheys)
-	(B*I*J, C, M, M) -> (B, I, J, C, M, M)
-	"""
-	I, J = grid_shape
-	C, M = S.shape[1], S.shape[2]
-	return S.reshape(-1, I, J, C, M, M)
-
-def unstack(S, stride):
-	""" Tile patches to form image
-	(B, I, J, C, M, M) -> (B, C, I*M, J*M)
-	"""
-	B, I, J, C, M, _ = S.shape
-	T = S.reshape(B, I*J, C*M*M).permute(0,2,1)
-	return F.fold(T, (I*M, J*M), M, stride=stride)
