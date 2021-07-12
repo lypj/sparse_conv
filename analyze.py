@@ -95,7 +95,10 @@ def aDictionary(args, model, freq=True, show=False, save=True):
 	print("--------- dictionary ---------")
 	figlist = [] # append figures so they may all be closed at the end
 	save_dir = args['paths']['save']
-	D = model.D.weight.cpu() #.permute(1,0,2,3)
+	if model.stride > 1:
+		D = model.D.weight.cpu()
+	else:
+		D = model.D.weight.cpu().permute(1,0,2,3)
 	# get effective dictionary
 	n = int(np.ceil(np.sqrt(D.shape[0])))
 	if show:

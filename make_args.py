@@ -12,9 +12,12 @@ args_file = open("args.json")
 args = json.load(args_file)
 args_file.close()
 
+joint_loop = True
+
 loop_args = {
-	"adaptive": [True,False],
-	"noise_std": [[15,35],[0,55]]
+	"iters": [102,50,30,24,20],
+	"num_filters": [256,196,169,128,102],
+	"filter_size": [3,5,7,9,11]
 }
 
 args["model"] = {
@@ -46,7 +49,7 @@ args["train"] = {
 		"clip_grad": 5e-2,
 	},
 	"opt": {
-		"lr": 8e-4
+		"lr": 5e-4
 	},
 	"sched": {
 		"gamma": 0.95,
@@ -58,8 +61,8 @@ args['type'] = "CDLNet"
 #args['paths']['ckpt'] = ""
 #epoch0 = "4000.ckpt"
 #ckpt = "Models/CDLNet-nht_trnweight-0a/4000.ckpt"
-vnum = 0
-name = "graybig-AB"
+vnum = 5
+name = "itnffs"
 
 def product(*args, repeat=1):
 	# product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
@@ -74,24 +77,50 @@ def product(*args, repeat=1):
 keys = list(loop_args.keys())
 
 with open(f"Models/{args['type']}-{name}.summary", "a") as summary:
-	for items in product(*[loop_args[k] for k in keys]):
-		for i, it in enumerate(items):
-			if keys[i] in args['model']:
-				args['model'][keys[i]] = it
-			elif keys[i] in args['train']:
-				args['train'][keys[i]] = it
-			elif keys[i] in args['train']['fit']:
-				args['train']['fit'][keys[i]] = it
-			elif keys[i] in args['train']['loaders']:
-				args['train']['loaders'][keys[i]] = it
+	if joint_loop:
+		keys = list(loop_args.keys())
+		L = len(loop_args[keys[0]])
+		for i in range(L):
+			for k in keys:
+				if k in args['model']:
+					args['model'][k] = loop_args[k][i]
+				elif k in args['train']:
+					args['train'][k] = loop_args[k][i]
+				elif k in args['train']['fit']:
+					args['train']['fit'][k] = loop_args[k][i]
+				elif k in args['train']['loaders']:
+					args['train']['loaders'][k] = loop_args[k][i]
 
-		version = args['type']+"-" + name + "-" + str(vnum)
-		args['paths']['save'] = "Models/" + version
-		if args['paths']['ckpt'] is not None:
-			#args['paths']['ckpt'] = ckpt + str(vnum) + "a/" + epoch0
-			args['paths']['ckpt'] = ckpt
-		write_args(args, version)
-		print(f'{version}: {items}')
-		summary.write(f'{version}: {items}\n')
-		vnum += 1
+			version = args['type']+"-" + name + "-" + str(vnum)
+			args['paths']['save'] = "Models/" + version
+			if args['paths']['ckpt'] is not None:
+				#args['paths']['ckpt'] = ckpt + str(vnum) + "a/" + epoch0
+				args['paths']['ckpt'] = ckpt
+			write_args(args, version)
+			items = ', '.join([str(loop_args[k][i]) for k in keys])
+			print(f'{version}: {items}')
+			summary.write(f'{version}: {items}\n')
+			vnum += 1
+
+	else:
+		for items in product(*[loop_args[k] for k in keys]):
+			for i, it in enumerate(items):
+				if keys[i] in args['model']:
+					args['model'][keys[i]] = it
+				elif keys[i] in args['train']:
+					args['train'][keys[i]] = it
+				elif keys[i] in args['train']['fit']:
+					args['train']['fit'][keys[i]] = it
+				elif keys[i] in args['train']['loaders']:
+					args['train']['loaders'][keys[i]] = it
+
+			version = args['type']+"-" + name + "-" + str(vnum)
+			args['paths']['save'] = "Models/" + version
+			if args['paths']['ckpt'] is not None:
+				#args['paths']['ckpt'] = ckpt + str(vnum) + "a/" + epoch0
+				args['paths']['ckpt'] = ckpt
+			write_args(args, version)
+			print(f'{version}: {items}')
+			summary.write(f'{version}: {items}\n')
+			vnum += 1
 
