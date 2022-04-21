@@ -12,12 +12,10 @@ args_file = open("args.json")
 args = json.load(args_file)
 args_file.close()
 
-joint_loop = True
+joint_loop = False
 
 loop_args = {
-	"iters": [102,50,30,24,20],
-	"num_filters": [256,196,169,128,102],
-	"filter_size": [3,5,7,9,11]
+	"gabor_init": [True, False]
 }
 
 args["model"] = {
@@ -28,6 +26,7 @@ args["model"] = {
 	"stride": 2,
 	"iters": 30,
 	"tau0": 1e-2,
+	"gabor_init": False
 }
 
 args["train"] = {
@@ -61,8 +60,8 @@ args['type'] = "CDLNet"
 #args['paths']['ckpt'] = ""
 #epoch0 = "4000.ckpt"
 #ckpt = "Models/CDLNet-nht_trnweight-0a/4000.ckpt"
-vnum = 5
-name = "itnffs"
+vnum = 0
+name = "gabor_init"
 
 def product(*args, repeat=1):
 	# product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy

@@ -15,6 +15,42 @@ def imgLoad(path, gray=False):
 		return to_tensor(Image.open(path).convert('L'))[None,...]
 	return to_tensor(Image.open(path))[None,...]
 
+def gabor_kernel(a, f0, p=None, x0=None, m=None, cplx=False):
+	"""
+	generate a batch of gabor filterbank via inverse width (a) and frequency (f0) params
+	a  (precision):  (batch, out_chan, in_chan, 2) 
+	f0 (center freq): (batch, out_chan, in_chan, 2)
+	p  (phase): (batch, out_chan, in_chan)
+	h  (output): (batch, out_chan, in_chan, m, m)
+	"""
+	a = a[:,:,:,None,None,:]
+	f0 = f0[:,:,:,None,None,:]
+
+	# phase term
+	if p is None:
+		p = torch.zeros((a.shape[0],a.shape[1],a.shape[2],1,1), device=a.device)
+	else:
+		p = p[:,:,:,None,None]
+
+	if m is None:
+		m = int(np.ceil(np.maximum(np.max(5*(1/a).numpy()), 1)))
+		m = m + 1 - m%2 # ensure odd filter
+
+	if x0 is None:
+		x0 = torch.tensor([(m-1)/2,(m-1)/2])[None,None,None,None,None,:]
+		x0 = x0.to(a.device)
+	
+	i = torch.arange(m).to(a.device)
+	x = torch.stack(torch.meshgrid(i,i, indexing='ij'), dim=2)[None,None,...]
+	if cplx:
+		h = torch.exp( -torch.sum((a*(x-x0))**2, dim=-1) ) * \
+			torch.exp(1j*2*np.pi*(torch.sum(f0*(x-x0), dim=-1) + p))
+		return h
+
+	h = torch.exp( -torch.sum((a*(x-x0))**2, dim=-1) ) * \
+	    torch.cos(2*np.pi*(torch.sum(f0*(x-x0), dim=-1) + p))
+	return h
+
 def awgn(input, noise_std):
 	""" Additive White Gaussian Noise
 	y: clean input image

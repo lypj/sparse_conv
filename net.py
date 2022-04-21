@@ -20,11 +20,20 @@ class CDLNet(nn.Module):
 	             iters  = 3,         # num. unrollings
 	             tau0   = 1e-2,      # initial threshold
 	             adaptive = False,   # noise-adaptive thresholds
+	             gabor_init = False, # initialize weights with gabor filters
 	             init = True):       # False -> use power-method for weight init
 		super(CDLNet, self).__init__()
 		
 		# -- OPERATOR INIT --
-		W = torch.randn(num_filters,num_inchans,filter_size,filter_size)
+		if gabor_init:
+			a     = torch.randn(1,num_filters,num_inchans,2)
+			f0    = torch.randn(1,num_filters,num_inchans,2)
+			psi   = torch.randn(1,num_filters,num_inchans)
+			alpha = torch.randn(1,num_filters,num_inchans,1,1)
+			W = (alpha*utils.gabor_kernel(a, f0, p=psi, m=filter_size)).sum(dim=0)
+		else:
+			W = torch.randn(num_filters,num_inchans,filter_size,filter_size)
+
 		def conv_gen():
 			C = conv.Conv2d(num_inchans, num_filters, filter_size, stride)
 			C.weight = W.clone()
