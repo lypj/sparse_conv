@@ -219,7 +219,7 @@ if __name__ == "__main__":
 				arg = c; break
 		noise_std = eval(arg.split("=")[1])
 	else:
-		noise_std = 25
+		noise_std = args['train']['fit']['noise_std']
 	print(f"noise_std = {noise_std}")
 	if "--blind" in "".join(cmds):
 		arg = "--blind"

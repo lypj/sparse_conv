@@ -15,16 +15,17 @@ args_file.close()
 joint_loop = False
 
 loop_args = {
-	"gabor_init": [True, False]
+	"adaptive": [True,False],
+	"noise_std": [[1,20],[20,30]]
 }
 
 args["model"] = {
 	"adaptive": False,
-	"num_filters": 169,
+	"num_filters": 32,
 	"num_inchans": 1,
 	"filter_size": 7,
-	"stride": 2,
-	"iters": 30,
+	"stride": 1,
+	"iters": 20,
 	"tau0": 1e-2,
 	"gabor_init": False
 }
@@ -48,7 +49,7 @@ args["train"] = {
 		"clip_grad": 5e-2,
 	},
 	"opt": {
-		"lr": 5e-4
+		"lr": 1e-3
 	},
 	"sched": {
 		"gamma": 0.95,
@@ -61,7 +62,7 @@ args['type'] = "CDLNet"
 #epoch0 = "4000.ckpt"
 #ckpt = "Models/CDLNet-nht_trnweight-0a/4000.ckpt"
 vnum = 0
-name = "gabor_init"
+name = "small_AB"
 
 def product(*args, repeat=1):
 	# product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
