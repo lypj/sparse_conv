@@ -12,6 +12,9 @@ import torch.nn as nn
 from net import CDLNet
 from data import getFitLoaders
 from utils import awgn
+from torch.profiler import profile, record_function, ProfilerActivity
+import contextlib
+import time
 
 def main(args):
 	""" Given argument dictionary, load data, initialize model, and fit model.
@@ -46,6 +49,7 @@ def fit(model, opt, loaders,
 	    verbose = True,
 	    val_freq  = 1,
 	    save_freq = 1,
+	    fp16 = False,
 	    epoch_fun = None,
 	    backtrack_thresh = 1):
 	""" fit model to training data.
@@ -58,6 +62,7 @@ def fit(model, opt, loaders,
 	saveCkpt(path, model, 0, opt, sched)
 	top_psnr = {"train": 0, "val": 0, "test": 0} # for backtracking
 	epoch = start_epoch
+	total_time = 0
 	while epoch < start_epoch + epochs:
 		for phase in ['train', 'val', 'test']:
 			model.train() if phase == 'train' else model.eval()
@@ -70,26 +75,55 @@ def fit(model, opt, loaders,
 			else:
 				phase_nstd = noise_std
 			psnr = 0
+			scaler = torch.cuda.amp.grad_scaler.GradScaler()
+			amp = contextlib.nullcontext()
+			if fp16: 
+				amp =  torch.cuda.amp.autocast()
 			t = tqdm(iter(loaders[phase]), desc=phase.upper()+'-E'+str(epoch), dynamic_ncols=True)
+		#	with profile(activities=[
+		#		ProfilerActivity.CPU,
+		#		ProfilerActivity.CUDA
+		#		], profile_memory = True, record_shapes=True) as prof:
+		#		with record_function("model_inference"):
+
+			start = time.perf_counter()
 			for itern, batch in enumerate(t):
 				batch = batch.to(device)
 				noisy_batch, sigma_n = awgn(batch, phase_nstd)
 				opt.zero_grad()
 				with torch.set_grad_enabled(phase == 'train'):
-					batch_hat, _ = model(noisy_batch, sigma_n)
-					loss = torch.mean((batch - batch_hat)**2)
-					if phase == 'train':
-						loss.backward()
-						if clip_grad is not None:
-							nn.utils.clip_grad_norm_(model.parameters(), clip_grad)
-						opt.step()
-						model.project()
+					with amp:
+						batch_hat, _ = model(noisy_batch, sigma_n)
+						loss = torch.mean((batch - batch_hat)**2)
+						scale = 1.0
+						if phase == 'train':
+							if fp16:
+								scaler.scale(loss).backward()
+							else:
+								loss.backward()
+							if clip_grad is not None:
+								nn.utils.clip_grad_norm_(model.parameters(), clip_grad)
+							if fp16:
+								scaler.step(opt)
+								scaler.update()
+								scale = scaler.get_scale()
+							else:
+								opt.step()
+							model.project()
 				loss = loss.item()
 				if verbose:
 					total_norm = grad_norm(model.parameters())
 					t.set_postfix_str(f"loss={loss:.1e}|gnorm={total_norm:.1e}")
 				psnr = psnr - 10*np.log10(loss)
+						
+			torch.cuda.synchronize()
+			end = time.perf_counter()
+			total_time = total_time + end - start
+			print(f"Total time: {end-start:3f}s")
+		#	print(prof.key_averages().table(sort_by="self_cuda_time_total", row_limit=15))
 			psnr = psnr/(itern+1)
+			if psnr > 27:
+				print(f"TTA 27: {total_time:3f}s")
 			print(f"{phase.upper()} PSNR: {psnr:.3f} dB")
 			if psnr > top_psnr[phase]:
 				top_psnr[phase] = psnr

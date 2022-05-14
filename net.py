@@ -6,7 +6,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import conv, solvers, utils, nle
+import solvers, utils, nle
+import conv
+import sp_conv
 
 class CDLNet(nn.Module):
 	""" Convolutional Dictionary Learning Network:
@@ -21,6 +23,7 @@ class CDLNet(nn.Module):
 	             tau0   = 1e-2,      # initial threshold
 	             adaptive = False,   # noise-adaptive thresholds
 	             gabor_init = False, # initialize weights with gabor filters
+	             sparse_conv = False,   # sparse convolution
 	             init = True):       # False -> use power-method for weight init
 		super(CDLNet, self).__init__()
 		
@@ -38,6 +41,10 @@ class CDLNet(nn.Module):
 			C = conv.Conv2d(num_inchans, num_filters, filter_size, stride)
 			C.weight = W.clone()
 			return C
+		def sp_conv_gen():
+			C = sp_conv.Conv2d(num_inchans, num_filters, filter_size, stride)
+			C.weight = W.clone()
+			return C
 		def convT_gen():
 			if stride == 1:
 				C = conv.Conv2d(num_filters, num_inchans, filter_size, stride)
@@ -46,9 +53,20 @@ class CDLNet(nn.Module):
 				C = conv.ConvAdjoint2d(num_filters, num_inchans, filter_size, stride)
 				C.weight = W.clone()
 			return C
+		def sp_convT_gen():
+			if stride == 1:
+				C = sp_conv.Conv2d(num_filters, num_inchans, filter_size, stride)
+				C.weight = sp_conv.adjoint(W).clone()
+			else:
+				C = sp_conv.ConvAdjoint2d(num_filters, num_inchans, filter_size, stride)
+				C.weight = W.clone()
+			return C
 		self.D = convT_gen()
 		self.A = nn.ModuleList([conv_gen()  for _ in range(iters)])
 		self.B = nn.ModuleList([convT_gen() for _ in range(iters)])
+		self.sp_B = self.B
+		if sparse_conv:
+			self.sp_B = nn.ModuleList([sp_convT_gen() for _ in range(iters)])
 
 		# Don't bother running code if initializing trained model from state-dict
 		if init:
@@ -104,7 +122,12 @@ class CDLNet(nn.Module):
 		# LISTA
 		z = ST(self.A[0](yp), self.tau[0][:1] + c*self.tau[0][1:2])
 		for k in range(1, self.iters):
-			z = ST(z - self.A[k](self.B[k](z) - yp), self.tau[k][:1] + c*self.tau[k][1:2])
+			z = ST(z - self.A[k](self.sp_B[k](z) - yp), self.tau[k][:1] + c*self.tau[k][1:2])
+                        #print("Sparsity:",torch.sum(z==0.0) / (z.shape[0]*z.shape[1]*z.shape[2]*z.shape[3]))
+                        #temp = self.B[k](z)
+                        #temp = temp - yp
+                        #temp = self.A[k](temp)
+                        #z = ST(z - temp, self.tau[k][:1] + c*self.tau[k][1:2])
 		# DICTIONARY SYNTHESIS
 		xphat = self.D(z)
 		xhat  = utils.post_process(xphat, params)
