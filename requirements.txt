@@ -1,8 +1,0 @@
-matplotlib==3.3.3
-numpy==1.19.5
-Pillow==8.1.0
-PyWavelets==1.1.1
-scipy==1.6.0
-torch==1.7.1+cu110
-torchvision==0.8.2+cu110
-tqdm==4.55.1

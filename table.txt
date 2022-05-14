@@ -1,8 +1,0 @@
-\begin{tabular}{cccccc}
-Model \# & Params & K & M & Stride & O(FLOPS) & $\sigma_n=25$ \\ \hline
-Bigger-0/b & 970k & 50 & 196 & 2 & 120k & 29.30/- \\ 
-Bigger-1/b & 970k & 50 & 196 & 4 & 30k & 29.18/- \\ 
-Bigger-2/b & 1916k & 40 & 484 & 2 & 237k & 29.34/- \\ 
-Bigger-3/b & 1916k & 40 & 484 & 4 & 59k & 29.26/- \\ 
-\hline 
-\end{tabular}
