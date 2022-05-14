@@ -1,6 +1,6 @@
 Deeping Convolutional Dictionary Learning with Sparse Convolution
 
-Cloned from https://github.com/nikopj/CDLNet
+Cloned from https://github.com/nikopj/CDLNet  
 Modified with https://github.com/traveller59/spconv
 
 Requirements:   
